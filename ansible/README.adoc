@@ -11,9 +11,9 @@ This is a simple ansible primer to excellerate a quick spin up on how to use ans
 
 == Other resources
 
-* https://docs.ansible.com/ansible/latest/user_guide/quickstart.html
-* https://www.tutorialspoint.com/ansible/ansible_quick_guide.htm
-* https://ryaneschinger.com/blog/ansible-quick-start/
+* https://docs.ansible.com/ansible/latest/user_guide/quickstart.html[ansible quick start]
+* https://www.tutorialspoint.com/ansible/ansible_quick_guide.html[tutorial quick start]
+* https://ryaneschinger.com/blog/ansible-quick-start/[blog quick start]
 
 == Important RPMs
 
