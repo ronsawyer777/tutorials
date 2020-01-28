@@ -25,7 +25,7 @@ This is a simple ansible primer to excellerate a quick spin up on how to use ans
 ==== YAML
 
 
-YAML example:
+YAML Playbook example:
 ```
 ---
 - name: "Configure Satellite OS - pre Satellite install"
@@ -133,7 +133,7 @@ YAML example:
       mode: 0644
 ```
 
-resolv.j2 
+Template: resolv.j2 
 ```
 # ansible modified
 search ron.example.com
