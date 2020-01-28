@@ -24,9 +24,9 @@ This is a simple ansible primer to excellerate a quick spin up on how to use ans
 
 ==== YAML
 
-```
-YAML example:
 
+YAML example:
+```
 ---
 - name: "enable sat repos"
   hosts: 192.168.122.11
