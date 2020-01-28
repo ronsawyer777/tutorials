@@ -1,5 +1,5 @@
 Ansible Primer
-===========================
+==============
 :Author: Ron Sawyer
 :Email: rsawyer@redhat.com
 :Date: 28 Jan 2020
