@@ -28,14 +28,14 @@ This is a simple ansible primer to excellerate a quick spin up on how to use ans
 YAML example:
 ```
 ---
-- name: "enable sat repos"
+- name: "Configure Satellite OS - pre Satellite install"
   hosts: 192.168.122.11
   vars:
     ipa_server_ip: 192.168.122.10
      
   tasks:
 
-  - name: 'enable repository'
+  - name: 'enable required repositories'
     rhsm_repository:
       name:
         - 'rhel-server-rhscl-7-rpms'
@@ -45,7 +45,7 @@ YAML example:
         - 'rhel-7-server-extras-rpms'
       state: 'enabled'
 
-  - name: Add pkgs
+  - name: Add required pkgs
     yum:
       name:
         - chrony
@@ -62,7 +62,7 @@ YAML example:
       state: started
       enabled: yes
 
-  - name: copy install script
+  - name: copy install script that will install Satellite
     copy:
       src: sat_install.sh
       dest: /root/sat_install.sh
@@ -70,7 +70,7 @@ YAML example:
       group: root
       mode: 0640
 
-  - name: copy fw script
+  - name: copy firewall configuration script script as a backup
     copy:
       src: sat_firewall.sh
       dest: /root/sat_firewall.sh
@@ -78,7 +78,7 @@ YAML example:
       group: root
       mode: 0640
 
-  - name: copy dhcp test script
+  - name: copy dhcp test script for testing if DHCP is actually working
     copy:
       src: check_dhcp.sh
       dest: /root/check_dhcp.sh
@@ -86,7 +86,7 @@ YAML example:
       group: root
       mode: 0640
 
-  - name: copy sat test script
+  - name: copy sat test script for basic health checks
     copy:
       src: check_sat.sh
       dest: /root/check_sat.sh
@@ -94,7 +94,7 @@ YAML example:
       group: root
       mode: 0640
 
-  - name: Configure firewalld 8140
+  - name: Configure firewalld ports
     firewalld:
       permanent: yes
       state: enabled
@@ -131,4 +131,12 @@ YAML example:
       owner: root
       group: root
       mode: 0644
+```
+
+resolv.j2 
+```
+# ansible modified
+search ron.example.com
+nameserver {{ ipa_server_ip }}
+nameserver 192.168.122.1
 ```
