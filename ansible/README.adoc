@@ -1,0 +1,134 @@
+Ansible Primer
+===========================
+:Author: Ron Sawyer
+:Email: rsawyer@redhat.com
+:Date: 28 Jan 2020
+:toc:
+ 
+== Introduction
+
+This is a simple ansible primer to excellerate a quick spin up on how to use ansible, playbooks, roles, etc.
+
+== Other resources
+
+* https://docs.ansible.com/ansible/latest/user_guide/quickstart.html
+* https://www.tutorialspoint.com/ansible/ansible_quick_guide.htm
+* https://ryaneschinger.com/blog/ansible-quick-start/
+
+== Important RPMs
+
+.Essential ansible RPM
+* ansible.noarch
+
+== Ansible Basics
+
+==== YAML
+
+```
+YAML example:
+
+---
+- name: "enable sat repos"
+  hosts: 192.168.122.11
+  vars:
+    ipa_server_ip: 192.168.122.10
+     
+  tasks:
+
+  - name: 'enable repository'
+    rhsm_repository:
+      name:
+        - 'rhel-server-rhscl-7-rpms'
+        - 'rhel-7-server-satellite-6.6-rpms'
+        - 'rhel-7-server-satellite-maintenance-6-rpms'
+        - 'rhel-7-server-ansible-2.6-rpms'
+        - 'rhel-7-server-extras-rpms'
+      state: 'enabled'
+
+  - name: Add pkgs
+    yum:
+      name:
+        - chrony
+        - sos
+        - satellite
+        - rhel-system-roles
+        - ansible
+        - NetworkManager-glib
+      state: latest
+
+  - name: enable chronyd
+    service:
+      name: chronyd
+      state: started
+      enabled: yes
+
+  - name: copy install script
+    copy:
+      src: sat_install.sh
+      dest: /root/sat_install.sh
+      owner: root
+      group: root
+      mode: 0640
+
+  - name: copy fw script
+    copy:
+      src: sat_firewall.sh
+      dest: /root/sat_firewall.sh
+      owner: root
+      group: root
+      mode: 0640
+
+  - name: copy dhcp test script
+    copy:
+      src: check_dhcp.sh
+      dest: /root/check_dhcp.sh
+      owner: root
+      group: root
+      mode: 0640
+
+  - name: copy sat test script
+    copy:
+      src: check_sat.sh
+      dest: /root/check_sat.sh
+      owner: root
+      group: root
+      mode: 0640
+
+  - name: Configure firewalld 8140
+    firewalld:
+      permanent: yes
+      state: enabled
+      port: "{{ item }}"
+    with_items:
+      - 53/udp
+      - 53/tcp
+      - 67/udp
+      - 69/udp
+      - 80/tcp
+      - 443/tcp
+      - 5000/tcp
+      - 5647/tcp
+      - 8000/tcp
+      - 8140/tcp
+      - 9090/tcp
+    notify: firewalld reload
+
+  - name: firewalld reload
+    command: firewall-cmd --reload
+
+  - name: Set up resolv.conf
+    template:
+      src: resolv.j2
+      dest: /etc/resolv.conf
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: Config NetworkManager.conf
+    template:
+      src: NetworkManager.j2
+      dest: /etc/NetworkManager/NetworkManager.conf
+      owner: root
+      group: root
+      mode: 0644
+```
