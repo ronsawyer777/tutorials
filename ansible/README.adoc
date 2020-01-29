@@ -4,7 +4,7 @@ Ansible Primer
 :Email: rsawyer@redhat.com
 :Date: 28 Jan 2020
 :toc:
- 
+
 == Introduction
 
 This is a simple ansible primer to excellerate a quick spin up on how to use ansible, playbooks, roles, etc.
@@ -22,17 +22,36 @@ This is a simple ansible primer to excellerate a quick spin up on how to use ans
 
 == Ansible Basics
 
-==== YAML
+==== YAML Playbook example
 
+Directory structure
+```
+sat
+├── ansible.cfg
+├── create_sat_server_vm.sh
+├── files
+│   ├── check_dhcp.sh
+│   ├── check_sat.sh
+│   ├── sat_firewall.sh
+│   └── sat_install.sh
+├── hosts
+├── manifests
+│   ├── manifest_Finance_20200127T154706Z.zip
+│   ├── manifest_Operations_20200127T154820Z.zip
+│   └── manifest_RONSAT_20200109T181947Z.zip
+├── sat_os_config.yml
+└── templates
+    ├── NetworkManager.j2
+    └── resolv.j2
+```
 
-YAML Playbook example:
 ```
 ---
 - name: "Configure Satellite OS - pre Satellite install"
   hosts: 192.168.122.11
   vars:
     ipa_server_ip: 192.168.122.10
-     
+
   tasks:
 
   - name: 'enable required repositories'
@@ -133,10 +152,453 @@ YAML Playbook example:
       mode: 0644
 ```
 
-Template: resolv.j2 
+Template: resolv.j2
 ```
 # ansible modified
 search ron.example.com
 nameserver {{ ipa_server_ip }}
 nameserver 192.168.122.1
+```
+
+ansible.cfg
+```
+[defaults]
+inventory      = hosts
+forks          = 5
+remote_user    = root
+roles_path     = /usr/share/ansible/roles
+ask_pass       = True
+#log_path       =/var/log/ansible.log
+inventory_ignore_extensions = ~, .swp, .md, .adoc, .csv, .retry, .pyc, .pyo, .example
+display_skipped_hosts = False
+deprecation_warnings = False
+command_warnings = False
+nocows         = 1
+retry_files_enabled = False
+host_key_checking = False
+
+[privilege_escalation]
+become         = False
+#become_method  = sudo
+#become_user    = root
+#become_ask_pass= True
+
+[ssh_connection]
+ssh_args = -o ControlMaster=auto -o ControlPersist=900s
+control_path = %(directory)s/%%h-%%r
+#pipelining = False
+```
+hosts - inventory file referenced in playbook
+```
+[idm]
+192.168.122.10
+[sat]
+192.168.122.11
+[clients]
+192.168.122.201
+192.168.122.202
+```
+
+== YAML basics
+
+==== syntax
+
+* spacing/indentation matters
+* first line starts with three dashes: '---'
+* last line ends with three dots: '...' Note, these are optional and usually left out
+
+A list starts each array item with a single dash '-'
+
+
+==== list example
+
+```
+---
+# A list of tasty fruits
+- Apple
+- Orange
+- Strawberry
+- Mango
+...
+```
+Dictionaries is represented in a simple key: value form (the colon must be followed by a space)
+
+==== dictionary example
+
+```
+# An employee record
+martin:
+    name: Martin D'vloper
+    job: Developer
+    skill: Elite
+```
+==== a list of dictionaries
+
+```
+# Employee records
+-  martin:
+    name: Martin D'vloper
+    job: Developer
+    skills:
+      - python
+      - perl
+      - pascal
+-  tabitha:
+    name: Tabitha Bitumen
+    job: Developer
+    skills:
+      - lisp
+      - fortran
+      - erlang
+```
+
+Lists and dictionaries can be represented in abbreviated form but is discouraged
+
+```
+---
+martin: {name: Martin D'vloper, job: Developer, skill: Elite}
+['Apple', 'Orange', 'Strawberry', 'Mango']
+```
+
+booleans
+
+```
+create_key: yes
+needs_agent: no
+knows_oop: True
+likes_emacs: TRUE
+uses_cvs: false
+```
+
+Values can span multiple lines using | or >. Spanning multiple lines using a “Literal Block Scalar” | will include the newlines and any trailing spaces. Using a “Folded Block Scalar” > will fold newlines to spaces; it’s used to make what would otherwise be a very long line easier to read and edit. In either case the indentation will be ignored. Examples are:
+
+```
+include_newlines: |
+            exactly as you see
+            will appear these three
+            lines of poetry
+
+fold_newlines: >
+            this is really a
+            single line of text
+            despite appearances
+```
+
+While in the above > example all newlines are folded into spaces, there are two ways to enforce a newline to be kept:
+
+```
+fold_some_newlines: >
+    a
+    b
+
+    c
+    d
+      e
+    f
+same_as: "a b\nc d\n  e\nf\n"
+```
+
+Let’s combine what we learned so far in an arbitrary YAML example. This really has nothing to do with Ansible, but will give you a feel for the format:
+
+```
+---
+# An employee record
+name: Martin D'vloper
+job: Developer
+skill: Elite
+employed: True
+foods:
+    - Apple
+    - Orange
+    - Strawberry
+    - Mango
+languages:
+    perl: Elite
+    python: Elite
+    pascal: Lame
+education: |
+    4 GCSEs
+    3 A-Levels
+    BSc in the Internet of Things
+```
+
+That’s all you really need to know about YAML to start writing Ansible playbooks.
+
+== lingo
+
+* Control node
+
+Any machine with Ansible installed. You can run commands and playbooks, invoking /usr/bin/ansible or /usr/bin/ansible-playbook, from any control node. You can use any computer that has Python installed on it as a control node - laptops, shared desktops, and servers can all run Ansible. However, you cannot use a Windows machine as a control node. You can have multiple control nodes.
+
+* Managed nodes
+
+The network devices (and/or servers) you manage with Ansible. Managed nodes are also sometimes called “hosts”. Ansible is not installed on managed nodes.
+
+* Inventory
+
+A list of managed nodes. An inventory file is also sometimes called a “hostfile”. Your inventory can specify information like IP address for each managed node. An inventory can also organize managed nodes, creating and nesting groups for easier scaling. To learn more about inventory, see the Working with Inventory section.
+
+* Modules
+
+The units of code Ansible executes. Each module has a particular use, from administering users on a specific type of database to managing VLAN interfaces on a specific type of network device. You can invoke a single module with a task, or invoke several different modules in a playbook. For an idea of how many modules Ansible includes, take a look at the list of all modules.
+
+* Tasks
+
+The units of action in Ansible. You can execute a single task once with an ad-hoc command.
+
+* Playbooks
+
+Ordered lists of tasks, saved so you can run those tasks in that order repeatedly. Playbooks can include variables as well as tasks. Playbooks are written in YAML and are easy to read, write, share and understand.
+
+==== adhoc
+
+```
+$ ansible all -m ping
+```
+response
+
+```
+aserver.example.org | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+```
+
+''ping'' is the module being used.
+
+''all'' are the managed nodes being run against, this means all the hosts in the hosts file.
+
+==== modules
+
+ All modules
+ Cloud modules
+ Clustering modules
+ Commands modules
+ Crypto modules
+ Database modules
+ Files modules
+ Identity modules
+ Inventory modules
+ Messaging modules
+ Monitoring modules
+ Net Tools modules
+ Network modules
+ Notification modules
+ Packaging modules
+ Remote Management modules
+ Source Control modules
+ Storage modules
+ System modules
+ Utilities modules
+ Web Infrastructure modules
+ Windows modules
+
+==== command modules
+
+ command – Execute commands on targets
+ expect – Executes a command and responds to prompts
+ psexec – Runs commands on a remote Windows host based on the PsExec model
+ raw – Executes a low-down and dirty command
+ script – Runs a local script on a remote node after transferring it
+ shell – Execute shell commands on targets
+ telnet – Executes a low-down and dirty telnet command
+
+==== Files modules
+
+ acl – Set and retrieve file ACL information
+ archive – Creates a compressed archive of one or more files or trees
+ assemble – Assemble configuration files from fragments
+ blockinfile – Insert/update/remove a text block surrounded by marker lines
+ copy – Copy files to remote locations
+ fetch – Fetch files from remote nodes
+ file – Manage files and file properties
+ find – Return a list of files based on specific criteria
+ ini_file – Tweak settings in INI files
+ iso_extract – Extract files from an ISO image
+ lineinfile – Manage lines in text files
+ patch – Apply patch files using the GNU patch tool
+ read_csv – Read a CSV file
+ replace – Replace all instances of a particular string in a file using a back-referenced regular expression
+ stat – Retrieve file or file system status
+ synchronize – A wrapper around rsync to make common tasks in your playbooks quick and easy
+ tempfile – Creates temporary files and directories
+ template – Template a file out to a remote server
+ unarchive – Unpacks an archive after (optionally) copying it from the local machine
+ xattr – Manage user defined extended attributes
+ xml – Manage bits and pieces of XML files or strings
+
+==== help
+
+ ansible-doc <module>
+
+```
+ > PING    (/usr/lib/python3.7/site-packages/ansible/modules/system/ping.py)
+
+         A trivial test module, this module always returns `pong' on successful contact. It
+         does not make sense in playbooks, but it is useful from `/usr/bin/ansible' to
+         verify the ability to login and that a usable Python is configured. This is NOT
+         ICMP ping, this is just a trivial test module that requires Python on the remote-
+         node. For Windows targets, use the [win_ping] module instead. For Network targets,
+         use the [net_ping] module instead.
+
+   * This module is maintained by The Ansible Core Team
+ OPTIONS (= is mandatory):
+
+ - data
+         Data to return for the `ping' return value.
+         If this parameter is set to `crash', the module will cause an exception.
+         [Default: pong]
+         type: str
+
+
+
+ SEE ALSO:
+      * Module net_ping
+           The official documentation on the net_ping module.
+           https://docs.ansible.com/ansible/2.9/modules/net_ping_module.html
+      * Module win_ping
+           The official documentation on the win_ping module.
+           https://docs.ansible.com/ansible/2.9/modules/win_ping_module.html
+
+
+AUTHOR: Ansible Core Team, Michael DeHaan
+        METADATA:
+          status:
+          - stableinterface
+          supported_by: core
+
+
+EXAMPLES:
+
+# Test we can logon to 'webservers' and execute python with json lib.
+# ansible webservers -m ping
+
+# Example from an Ansible Playbook
+- ping:
+
+# Induce an exception to see what happens
+- ping:
+    data: crash
+
+
+RETURN VALUES:
+
+ping:
+    description: value provided with the data parameter
+    returned: success
+    type: str
+    sample: pong
+```
+
+```
+> COPY    (/usr/lib/python3.7/site-packages/ansible/modules/files/copy.py)
+
+        The `copy' module copies a file from the local or remote machine to a location on
+        the remote machine. Use the [fetch] module to copy files from remote locations to
+        the local box. If you need variable interpolation in copied files, use the
+        [template] module. Using a variable in the `content' field will result in
+        unpredictable output. For Windows targets, use the [win_copy] module instead.
+
+  * This module is maintained by The Ansible Core Team
+  * note: This module has a corresponding action plugin.
+
+OPTIONS (= is mandatory):
+
+- attributes
+        The attributes the resulting file or directory should have.
+        To get supported flags look at the man page for `chattr' on the target system.
+        This string should contain the attributes in the same order as the one displayed
+        by `lsattr'.
+        The `=' operator is assumed as default, otherwise `+' or `-' operators need to be
+        included in the string.
+        (Aliases: attr)[Default: (null)]
+        type: str
+        version_added: 2.3
+
+- backup
+        Create a backup file including the timestamp information so you can get the
+        original file back if you somehow clobbered it incorrectly.
+        [Default: False]
+        type: bool
+        version_added: 0.7
+
+- checksum
+        SHA1 checksum of the file being transferred.
+        Used to validate that the copy of the file was successful.
+        If this is not provided, ansible will use the local calculated checksum of the src
+        file.
+        [Default: (null)]
+
+ ... < lines deleted >
+
+ EXAMPLES:
+
+- name: Copy file with owner and permissions
+  copy:
+    src: /srv/myfiles/foo.conf
+    dest: /etc/foo.conf
+    owner: foo
+    group: foo
+    mode: '0644'
+
+- name: Copy file with owner and permission, using symbolic representation
+  copy:
+    src: /srv/myfiles/foo.conf
+    dest: /etc/foo.conf
+    owner: foo
+    group: foo
+    mode: u=rw,g=r,o=r
+
+- name: Another symbolic mode example, adding some permissions and removing others
+  copy:
+    src: /srv/myfiles/foo.conf
+    dest: /etc/foo.conf
+    owner: foo
+    group: foo
+    mode: u+rw,g-wx,o-rwx
+
+- name: Copy a new "ntp.conf file into place, backing up the original if it differs from the copied version
+  copy:
+    src: /mine/ntp.conf
+    dest: /etc/ntp.conf
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
+
+- name: Copy a new "sudoers" file into place, after passing validation with visudo
+  copy:
+    src: /mine/sudoers
+    dest: /etc/sudoers
+    validate: /usr/sbin/visudo -csf %s
+
+- name: Copy a "sudoers" file on the remote machine for editing
+  copy:
+    src: /etc/sudoers
+    dest: /etc/sudoers.edit
+    remote_src: yes
+    validate: /usr/sbin/visudo -csf %s
+
+- name: Copy using inline content
+  copy:
+    content: '# This file was moved to /etc/other.conf'
+    dest: /etc/mine.conf
+
+- name: If follow=yes, /path/to/file will be overwritten by contents of foo.conf
+  copy:
+    src: /etc/foo.conf
+    dest: /path/to/link  # link to /path/to/file
+    follow: yes
+
+- name: If follow=no, /path/to/link will become a file and be overwritten by contents of foo.conf
+  copy:
+    src: /etc/foo.conf
+    dest: /path/to/link  # link to /path/to/file
+    follow: no
+
+ ... < lines deleted >
+
 ```
