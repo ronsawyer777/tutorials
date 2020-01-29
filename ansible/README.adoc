@@ -162,7 +162,22 @@ nameserver {{ ipa_server_ip }}
 nameserver 192.168.122.1
 ```
 
-hosts - inventory file referenced in playbook
+==== hosts - inventory file
+
+Any systems you want to configure must exist in the hosts/inventory file and
+referenced in the playbook.  Hosts can be grouped and referenced by the group
+name, or the alias 'all' can be used to select all hosts in the inventory.
+
+Note inventories can be static or dynamic.
+
+Default inventory is located in /etc/ansible/hosts but you can create a local
+hosts file in the current directory and specify it's location in a local
+ansible.cfg file.
+
+Your inventory can store much more than IPs and FQDNs. As noted, you can create
+aliases, set variable values for a single host with host vars, or set variable
+values for multiple hosts with group vars.
+
 ```
 [idm]
 192.168.122.10
@@ -171,6 +186,8 @@ hosts - inventory file referenced in playbook
 [clients]
 192.168.122.201
 192.168.122.202
+
+
 ```
 
 == YAML basics
@@ -244,7 +261,11 @@ likes_emacs: TRUE
 uses_cvs: false
 ```
 
-Values can span multiple lines using | or >. Spanning multiple lines using a “Literal Block Scalar” | will include the newlines and any trailing spaces. Using a “Folded Block Scalar” > will fold newlines to spaces; it’s used to make what would otherwise be a very long line easier to read and edit. In either case the indentation will be ignored. Examples are:
+Values can span multiple lines using | or >. Spanning multiple lines using a
+“Literal Block Scalar” | will include the newlines and any trailing spaces.
+Using a “Folded Block Scalar” > will fold newlines to spaces; it’s used to make
+what would otherwise be a very long line easier to read and edit. In either
+case the indentation will be ignored. Examples are:
 
 ```
 include_newlines: |
@@ -258,7 +279,8 @@ fold_newlines: >
             despite appearances
 ```
 
-While in the above > example all newlines are folded into spaces, there are two ways to enforce a newline to be kept:
+While in the above > example all newlines are folded into spaces, there are two
+ways to enforce a newline to be kept:
 
 ```
 fold_some_newlines: >
@@ -272,7 +294,8 @@ fold_some_newlines: >
 same_as: "a b\nc d\n  e\nf\n"
 ```
 
-Let’s combine what we learned so far in an arbitrary YAML example. This really has nothing to do with Ansible, but will give you a feel for the format:
+Let’s combine what we learned so far in an arbitrary YAML example. This really
+has nothing to do with Ansible, but will give you a feel for the format:
 
 ```
 ---
@@ -302,33 +325,48 @@ That’s all you really need to know about YAML to start writing Ansible playboo
 
 * Control node
 
-Any machine with Ansible installed. You can run commands and playbooks, invoking /usr/bin/ansible or /usr/bin/ansible-playbook, from any control node. You can use any computer that has Python installed on it as a control node - laptops, shared desktops, and servers can all run Ansible. However, you cannot use a Windows machine as a control node. You can have multiple control nodes.
+Any machine with Ansible installed. You can run commands and playbooks,
+invoking /usr/bin/ansible or /usr/bin/ansible-playbook, from any control node.
+You can use any computer that has Python installed on it as a control node -
+laptops, shared desktops, and servers can all run Ansible. However, you cannot
+use a Windows machine as a control node. You can have multiple control nodes.
 
 * Managed nodes
 
-The network devices (and/or servers) you manage with Ansible. Managed nodes are also sometimes called “hosts”. Ansible is not installed on managed nodes.
+The network devices (and/or servers) you manage with Ansible. Managed nodes are
+also sometimes called “hosts”. Ansible is not installed on managed nodes.
 
 * Inventory
 
-A list of managed nodes. An inventory file is also sometimes called a “hostfile”. Your inventory can specify information like IP address for each managed node. An inventory can also organize managed nodes, creating and nesting groups for easier scaling. To learn more about inventory, see the Working with Inventory section.
+A list of managed nodes. An inventory file is also sometimes called a “hostfile”.
+Your inventory can specify information like IP address for each managed node. An
+inventory can also organize managed nodes, creating and nesting groups for
+easier scaling. To learn more about inventory, see the Working with Inventory section.
 
 * Modules
 
-The units of code Ansible executes. Each module has a particular use, from administering users on a specific type of database to managing VLAN interfaces on a specific type of network device. You can invoke a single module with a task, or invoke several different modules in a playbook. For an idea of how many modules Ansible includes, take a look at the list of all modules.
+The units of code Ansible executes. Each module has a particular use, from
+administering users on a specific type of database to managing VLAN interfaces
+on a specific type of network device. You can invoke a single module with a
+task, or invoke several different modules in a playbook. For an idea of how
+many modules Ansible includes, take a look at the list of all modules.
 
 * Tasks
 
-The units of action in Ansible. You can execute a single task once with an ad-hoc command.
+The units of action in Ansible. You can execute a single task once with an
+ad-hoc command.
 
 * Playbooks
 
-Ordered lists of tasks, saved so you can run those tasks in that order repeatedly. Playbooks can include variables as well as tasks. Playbooks are written in YAML and are easy to read, write, share and understand.
+Ordered lists of tasks, saved so you can run those tasks in that order
+repeatedly. Playbooks can include variables as well as tasks. Playbooks are
+written in YAML and are easy to read, write, share and understand.
 
 ==== adhoc
 
-```
-$ ansible all -m ping
-```
+
+ $ ansible all -m ping
+
 response
 
 ```
@@ -343,7 +381,17 @@ aserver.example.org | SUCCESS => {
 
 ''ping'' is the module being used.
 
-''all'' are the managed nodes being run against, this means all the hosts in the hosts file.
+''all'' are the managed nodes being run against, this means all the hosts in
+the hosts file.
+
+The command module is a default module you simple provide -a with command
+arguments.
+
+ $ ansible all -a "uptime"
+
+Is the same as:
+
+ $ ansible all -m command -a "uptime"
 
 ==== modules
 
@@ -395,21 +443,23 @@ aserver.example.org | SUCCESS => {
  lineinfile – Manage lines in text files
  patch – Apply patch files using the GNU patch tool
  read_csv – Read a CSV file
- replace – Replace all instances of a particular string in a file using a back-referenced regular expression
+ replace – Replace all instances of a particular string in a file using a
+ back-referenced regular expression
  stat – Retrieve file or file system status
- synchronize – A wrapper around rsync to make common tasks in your playbooks quick and easy
+ synchronize – A wrapper around rsync to make common tasks in your playbooks
+ quick and easy
  tempfile – Creates temporary files and directories
  template – Template a file out to a remote server
  unarchive – Unpacks an archive after (optionally) copying it from the local machine
  xattr – Manage user defined extended attributes
  xml – Manage bits and pieces of XML files or strings
 
-==== help
+==== help with modules
 
- ansible-doc <module>
+ ansible-doc <module-name>
 
 ```
- > PING    (/usr/lib/python3.7/site-packages/ansible/modules/system/ping.py)
+  > PING    (/usr/lib/python3.7/site-packages/ansible/modules/system/ping.py)
 
          A trivial test module, this module always returns `pong' on successful contact. It
          does not make sense in playbooks, but it is useful from `/usr/bin/ansible' to
@@ -418,7 +468,7 @@ aserver.example.org | SUCCESS => {
          node. For Windows targets, use the [win_ping] module instead. For Network targets,
          use the [net_ping] module instead.
 
-   * This module is maintained by The Ansible Core Team
+   * This module is maintained by The Ansible Core Team\
  OPTIONS (= is mandatory):
 
  - data
@@ -468,7 +518,7 @@ ping:
 ```
 
 ```
-> COPY    (/usr/lib/python3.7/site-packages/ansible/modules/files/copy.py)
+ > COPY    (/usr/lib/python3.7/site-packages/ansible/modules/files/copy.py)
 
         The `copy' module copies a file from the local or remote machine to a location on
         the remote machine. Use the [fetch] module to copy files from remote locations to
@@ -479,9 +529,9 @@ ping:
   * This module is maintained by The Ansible Core Team
   * note: This module has a corresponding action plugin.
 
-OPTIONS (= is mandatory):
+ OPTIONS (= is mandatory):
 
-- attributes
+ - attributes
         The attributes the resulting file or directory should have.
         To get supported flags look at the man page for `chattr' on the target system.
         This string should contain the attributes in the same order as the one displayed
@@ -492,14 +542,14 @@ OPTIONS (= is mandatory):
         type: str
         version_added: 2.3
 
-- backup
+ - backup
         Create a backup file including the timestamp information so you can get the
         original file back if you somehow clobbered it incorrectly.
         [Default: False]
         type: bool
         version_added: 0.7
 
-- checksum
+ - checksum
         SHA1 checksum of the file being transferred.
         Used to validate that the copy of the file was successful.
         If this is not provided, ansible will use the local calculated checksum of the src
@@ -510,7 +560,7 @@ OPTIONS (= is mandatory):
 
  EXAMPLES:
 
-- name: Copy file with owner and permissions
+ - name: Copy file with owner and permissions
   copy:
     src: /srv/myfiles/foo.conf
     dest: /etc/foo.conf
@@ -518,7 +568,7 @@ OPTIONS (= is mandatory):
     group: foo
     mode: '0644'
 
-- name: Copy file with owner and permission, using symbolic representation
+ - name: Copy file with owner and permission, using symbolic representation
   copy:
     src: /srv/myfiles/foo.conf
     dest: /etc/foo.conf
@@ -526,7 +576,7 @@ OPTIONS (= is mandatory):
     group: foo
     mode: u=rw,g=r,o=r
 
-- name: Another symbolic mode example, adding some permissions and removing others
+ - name: Another symbolic mode example, adding some permissions and removing others
   copy:
     src: /srv/myfiles/foo.conf
     dest: /etc/foo.conf
@@ -534,7 +584,7 @@ OPTIONS (= is mandatory):
     group: foo
     mode: u+rw,g-wx,o-rwx
 
-- name: Copy a new "ntp.conf file into place, backing up the original if it differs from the copied version
+ - name: Copy a new "ntp.conf file into place, backing up the original if it differs from the copied version
   copy:
     src: /mine/ntp.conf
     dest: /etc/ntp.conf
@@ -543,41 +593,51 @@ OPTIONS (= is mandatory):
     mode: '0644'
     backup: yes
 
-- name: Copy a new "sudoers" file into place, after passing validation with visudo
+ - name: Copy a new "sudoers" file into place, after passing validation with visudo
   copy:
     src: /mine/sudoers
     dest: /etc/sudoers
     validate: /usr/sbin/visudo -csf %s
 
-- name: Copy a "sudoers" file on the remote machine for editing
+ - name: Copy a "sudoers" file on the remote machine for editing
   copy:
     src: /etc/sudoers
     dest: /etc/sudoers.edit
     remote_src: yes
     validate: /usr/sbin/visudo -csf %s
 
-- name: Copy using inline content
+ - name: Copy using inline content
   copy:
     content: '# This file was moved to /etc/other.conf'
     dest: /etc/mine.conf
 
-- name: If follow=yes, /path/to/file will be overwritten by contents of foo.conf
+ - name: If follow=yes, /path/to/file will be overwritten by contents of foo.conf
   copy:
     src: /etc/foo.conf
     dest: /path/to/link  # link to /path/to/file
     follow: yes
 
-- name: If follow=no, /path/to/link will become a file and be overwritten by contents of foo.conf
+ - name: If follow=no, /path/to/link will become a file and be overwritten by contents of foo.conf
   copy:
     src: /etc/foo.conf
     dest: /path/to/link  # link to /path/to/file
     follow: no
 
   ... < lines deleted >
-
 ```
 
-ansible.cfg
+==== ansible.cfg
+
+Default is /etc/ansible/ansible.cfg but you can create in the current directory to override defaults.
+
+Some items you may want to configure in ansible.cfg
+
+. inventory location
+. forks
+. remote_user
+. roles_path
+. log_path
+. become
 
 ```
 [defaults]
@@ -615,20 +675,22 @@ control_path = %(directory)s/%%h-%%r
 . playbook
 . file
 . directory
+. role/defaults
+. role/vars
+
 
 Variable names should be letters, numbers, and underscores. Variables should always start with a letter.
 
-```
-foo_port is a great variable. foo5 is fine too.
 
-foo-port, foo port, foo.port and 12 are not valid variable names.
-```
+ foo_port is a great variable. foo5 is fine too.
+
+ foo-port, foo port, foo.port and 12 are not valid variable names.
 
 ==== Using variables in playbooks
 
-```
-{{ variable_name }}
-```
+
+ {{ variable_name }}
+
 YAML syntax requires that if you start a value with {{ foo }} you quote the whole line, since it wants to be sure you aren’t trying to start a YAML dictionary.
 
 Note, this won’t work:
@@ -648,7 +710,7 @@ If multiple variables of the same name are defined in different places, they get
 
 Here is the order of precedence from least to greatest (the last listed variables winning prioritization):
 
-```
+
        command line values (eg “-u user”)
        role defaults [1]
        inventory file or script group vars [2]
@@ -671,7 +733,7 @@ Here is the order of precedence from least to greatest (the last listed variable
        role (and include_role) params
        include params
        extra vars (always win precedence)
-```
+
 
 ==== Variables discovered from systems: Facts
 
@@ -684,14 +746,14 @@ An example of this might be the IP address of the remote host, or what the opera
 To see what information is available, try the following in a play:
 
 ```
-       - debug: var=ansible_facts
+ - debug: var=ansible_facts
 ```
 
 To see the ‘raw’ information as gathered:
 
-```
+
        ansible hostname -m setup
-```
+
 
 This will return a large amount of variable data, which may look like this on Ansible 2.7:
 
@@ -775,3 +837,11 @@ This will return a large amount of variable data, which may look like this on An
  ...
 
 ```
+
+==== Execute a playbook
+
+ ansible-playbook playbook-name.yml
+
+Some options:
+. -c check
+. --ask-
