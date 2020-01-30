@@ -134,9 +134,6 @@ Real life playbook example, to configure satellite OS
       - 9090/tcp
     notify: firewalld reload
 
-  - name: firewalld reload
-    command: firewall-cmd --reload
-
   - name: Set up resolv.conf
     template:
       src: resolv.j2
@@ -152,6 +149,11 @@ Real life playbook example, to configure satellite OS
       owner: root
       group: root
       mode: 0644
+  
+  handlers:
+  - name: firewalld reload
+    command: firewall-cmd --reload
+      
 ```
 
 Template: resolv.j2
